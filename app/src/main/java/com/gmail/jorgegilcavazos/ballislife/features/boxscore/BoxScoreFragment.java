@@ -24,6 +24,7 @@ import com.gmail.jorgegilcavazos.ballislife.R;
 import com.gmail.jorgegilcavazos.ballislife.data.local.LocalRepository;
 import com.gmail.jorgegilcavazos.ballislife.features.application.BallIsLifeApplication;
 import com.gmail.jorgegilcavazos.ballislife.features.gamethread.CommentsActivity;
+import com.gmail.jorgegilcavazos.ballislife.features.model.BoxScoreTeam;
 import com.gmail.jorgegilcavazos.ballislife.features.model.BoxScoreValues;
 import com.gmail.jorgegilcavazos.ballislife.features.model.StatLine;
 import com.gmail.jorgegilcavazos.ballislife.features.model.SwishTheme;
@@ -148,16 +149,10 @@ public class BoxScoreFragment extends Fragment implements BoxScoreView {
         presenter.loadBoxScore(gameId, teamSelected, false /* forceNetwork */);
     }
 
-    @Override
-    public void showVisitorBoxScore(@NonNull BoxScoreValues values) {
-        btnHome.setText(getString(R.string.box_score_team_score, homeTeam,
-                values.getHls().getScore()));
-        btnAway.setText(getString(R.string.box_score_team_score, awayTeam,
-                values.getVls().getScore()));
-
+    public void showTeamBoxScore(BoxScoreTeam team){
         List<String> players = new ArrayList<>();
 
-        for (StatLine statLine : values.getVls().getPstsg()) {
+        for (StatLine statLine : team.getPstsg()) {
             // Some players don't have a first name, like Nene.
             if (statLine.getFn() != null && statLine.getFn().length() >= 1) {
                 players.add(statLine.getFn().substring(0, 1) + ". " + statLine.getLn());
@@ -180,7 +175,7 @@ public class BoxScoreFragment extends Fragment implements BoxScoreView {
         StatLine total = new StatLine(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"0","0");
         i = 1;
         addRowToStatsTable2(Optional.absent());
-        for (StatLine statLine : values.getVls().getPstsg()) {
+        for (StatLine statLine : team.getPstsg()) {
             addRowToStatsTable2(Optional.of(statLine));
             addToTeamTotalStats(statLine, total);
             if (i == 5 || i == players.size()-1) {
@@ -193,47 +188,23 @@ public class BoxScoreFragment extends Fragment implements BoxScoreView {
     }
 
     @Override
+    public void showVisitorBoxScore(@NonNull BoxScoreValues values) {
+        btnHome.setText(getString(R.string.box_score_team_score, homeTeam,
+                values.getHls().getScore()));
+        btnAway.setText(getString(R.string.box_score_team_score, awayTeam,
+                values.getVls().getScore()));
+
+        showTeamBoxScore(values.getVls());
+    }
+
+    @Override
     public void showHomeBoxScore(BoxScoreValues values) {
         btnHome.setText(getString(R.string.box_score_team_score, homeTeam,
                 values.getHls().getScore()));
         btnAway.setText(getString(R.string.box_score_team_score, awayTeam,
                 values.getVls().getScore()));
 
-        List<String> players = new ArrayList<>();
-
-        for (StatLine statLine : values.getHls().getPstsg()) {
-            // Some players don't have a first name, like Nene.
-            if (statLine.getFn() != null && statLine.getFn().length() >= 1) {
-                players.add(statLine.getFn().substring(0, 1) + ". " + statLine.getLn());
-            } else {
-                players.add(statLine.getLn());
-            }
-        }
-        players.add("TOTAL");
-
-        addRowToPlayersTable2("PLAYER");
-        int i = 1;
-        for (String player : players) {
-            addRowToPlayersTable2(player);
-            if (i == 5 || i == players.size()-1) {
-                addSeparatorRowToPlayers();
-            }
-            i++;
-        }
-
-        StatLine total = new StatLine(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"0","0");
-        i = 1;
-        addRowToStatsTable2(Optional.absent());
-        for (StatLine statLine : values.getHls().getPstsg()) {
-            addRowToStatsTable2(Optional.of(statLine));
-            addToTeamTotalStats(statLine, total);
-            if (i == 5 || i == players.size()-1) {
-                addSeparatorRowToStats(19);
-            }
-            i++;
-        }
-        displayTeamTotalStats(total);
-        scrollView.setVisibility(View.VISIBLE);
+        showTeamBoxScore(values.getHls());
     }
 
     @Override
